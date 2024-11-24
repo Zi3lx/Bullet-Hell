@@ -5,14 +5,17 @@ use nalgebra as na;
 pub struct Bullet {
     pub pos: na::Point2<f32>,
     pub vel: na::Vector2<f32>,
+    pub speed: f32,
 }
 
 impl Bullet {
-    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>) -> Bullet {
+    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32) -> Bullet {
         let direction = (target - pos).normalize();
+        let sp = speed;
         Bullet {
             pos,
-            vel: direction * 5.0,
+            vel: direction * sp,
+            speed,
         }
     }
 
@@ -30,5 +33,9 @@ impl Bullet {
         )?;
         graphics::draw(ctx, &square_mesh, DrawParam::default())?;
         Ok(())
+    }
+
+    pub fn is_off_screen(&self) -> bool {
+        self.pos.x < 0.0 || self.pos.x > 1600.0 || self.pos.y < 0.0 || self.pos.y > 1100.0
     }
 }

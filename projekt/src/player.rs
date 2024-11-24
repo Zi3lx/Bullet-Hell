@@ -18,7 +18,7 @@ impl Player {
         let s = Player {
             hp: 10,
             damage: 1,
-            speed: 5.0,
+            speed: 4.0,
             player_pos: na::Point2::new(400.0, 300.0),
             bullets: Vec::new(),
             last_shot_time: Instant::now(),
@@ -26,10 +26,17 @@ impl Player {
         Ok(s)
     }
 
+    pub fn take_damage(&mut self, damage: i32) {
+        self.hp -= damage;
+        if self.hp < 0 {
+            self.hp = 0; // Ensure health doesn't go below 0
+        }
+    }
+
     pub fn fire(&mut self, ctx: &mut Context) {
         if self.last_shot_time.elapsed() >= Duration::from_secs_f32(0.5) {
             let mouse_pos = mouse::position(ctx);
-            let bullet = Bullet::new(self.player_pos, na::Point2::new(mouse_pos.x, mouse_pos.y));
+            let bullet = Bullet::new(self.player_pos, na::Point2::new(mouse_pos.x, mouse_pos.y), 10.0);
             self.bullets.push(bullet);
             self.last_shot_time = Instant::now();  // Update the shot time
         }
@@ -71,9 +78,7 @@ impl Player {
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult {
         use ggez::graphics::{self, Mesh, DrawParam, Color};
-
-        graphics::clear(ctx, Color::from_rgb(0, 0, 0));
-
+    
         // Draw player
         let player = Mesh::new_circle(
             ctx,
@@ -84,12 +89,30 @@ impl Player {
             Color::from_rgb(0, 255, 0),
         )?;
         graphics::draw(ctx, &player, DrawParam::default())?;
-
+    
+        // Draw health bar
+        let health_bar_width = 40.0;
+        let health_bar_height = 5.0;
+        let health_percentage = self.hp as f32 / 10.0; // Assuming max HP is 10
+        let health_bar = graphics::Rect::new(
+            self.player_pos.x - health_bar_width / 2.0,
+            self.player_pos.y - 25.0, // Above the player
+            health_bar_width * health_percentage,
+            health_bar_height,
+        );
+        let health_mesh = Mesh::new_rectangle(
+            ctx,
+            graphics::DrawMode::fill(),
+            health_bar,
+            Color::from_rgb(255, 0, 0),
+        )?;
+        graphics::draw(ctx, &health_mesh, DrawParam::default())?;
+    
         // Draw bullets
         for bullet in &self.bullets {
             bullet.draw(ctx)?;
         }
-
+    
         graphics::present(ctx)?;
         Ok(())
     }
