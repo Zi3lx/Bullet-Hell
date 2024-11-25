@@ -1,21 +1,25 @@
 use ggez::{Context, GameResult};
 use ggez::graphics::{self, Color, DrawParam};
 use nalgebra as na;
+use crate::player::Player;
+use crate::enemy::Enemy;
 
 pub struct Bullet {
     pub pos: na::Point2<f32>,
     pub vel: na::Vector2<f32>,
     pub speed: f32,
+    pub damage: i32,
 }
 
 impl Bullet {
-    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32) -> Bullet {
+    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32, damage: i32) -> Bullet {
         let direction = (target - pos).normalize();
         let sp = speed;
         Bullet {
             pos,
             vel: direction * sp,
             speed,
+            damage
         }
     }
 
@@ -38,4 +42,27 @@ impl Bullet {
     pub fn is_off_screen(&self) -> bool {
         self.pos.x < 0.0 || self.pos.x > 1600.0 || self.pos.y < 0.0 || self.pos.y > 1100.0
     }
+
+    pub fn check_collision_with_player(&self, player: &Player) -> bool {
+        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 20.0, 20.0);
+        let bullet_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 20.0, 20.0);
+        bullet_rect.overlaps(&player_rect)
+    }
+
+    pub fn apply_damage(&self, player: &mut Player) {
+        player.take_damage(self.damage);
+    }
+
+    pub fn apply_damage_to_enemy(&self, enemy: &mut dyn Enemy) -> i32{
+        enemy.take_damage(self.damage);
+        enemy.get_hp()
+    }
+
+    pub fn check_collision_with_enemy(&self, enemy: &dyn Enemy) -> bool {
+        let enemy_pos = enemy.get_pos();
+        let enemy_rect = graphics::Rect::new(enemy_pos.x - 10.0, enemy_pos.y - 10.0, 20.0, 20.0);
+        let bullet_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 20.0, 20.0);
+        bullet_rect.overlaps(&enemy_rect)
+    }
+
 }

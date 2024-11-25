@@ -11,17 +11,23 @@ pub struct Player {
     pub player_pos: na::Point2<f32>,
     pub bullets: Vec<Bullet>,
     pub last_shot_time: Instant, // Time of the last shot
+    pub fire_rate: f32,
+    pub player_bullet_speed: f32,
+    pub coins: i32
 }
 
 impl Player {
     pub fn new() -> GameResult<Player> {
         let s = Player {
-            hp: 10,
+            hp: 100,
             damage: 1,
             speed: 4.0,
             player_pos: na::Point2::new(400.0, 300.0),
             bullets: Vec::new(),
             last_shot_time: Instant::now(),
+            fire_rate: 0.5,
+            player_bullet_speed: 15.0,
+            coins: 0
         };
         Ok(s)
     }
@@ -29,14 +35,14 @@ impl Player {
     pub fn take_damage(&mut self, damage: i32) {
         self.hp -= damage;
         if self.hp < 0 {
-            self.hp = 0; // Ensure health doesn't go below 0
+            self.hp = 0;
         }
     }
 
     pub fn fire(&mut self, ctx: &mut Context) {
-        if self.last_shot_time.elapsed() >= Duration::from_secs_f32(0.5) {
+        if self.last_shot_time.elapsed() >= Duration::from_secs_f32(self.fire_rate) {
             let mouse_pos = mouse::position(ctx);
-            let bullet = Bullet::new(self.player_pos, na::Point2::new(mouse_pos.x, mouse_pos.y), 10.0);
+            let bullet = Bullet::new(self.player_pos, na::Point2::new(mouse_pos.x, mouse_pos.y), self.player_bullet_speed, self.damage);
             self.bullets.push(bullet);
             self.last_shot_time = Instant::now();  // Update the shot time
         }
@@ -93,7 +99,7 @@ impl Player {
         // Draw health bar
         let health_bar_width = 40.0;
         let health_bar_height = 5.0;
-        let health_percentage = self.hp as f32 / 10.0; // Assuming max HP is 10
+        let health_percentage = self.hp as f32 / 100.0; // Assuming max HP is 10
         let health_bar = graphics::Rect::new(
             self.player_pos.x - health_bar_width / 2.0,
             self.player_pos.y - 25.0, // Above the player

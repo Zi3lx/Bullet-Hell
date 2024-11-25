@@ -2,16 +2,20 @@ use ggez::{Context, GameResult};
 use ggez::graphics::{self, Color, DrawParam};
 use ggez::mint::Point2;
 use nalgebra as na;
-use nalgebra::{Vector2};
 use crate::player::Player;
 use crate::bullet::Bullet;
+
 
 pub trait Enemy {
     fn update(&mut self, player: &Player, ctx: &mut Context, game_bullets: &mut Vec<Bullet>);
     fn draw(&self, ctx: &mut Context) -> GameResult;
     fn check_collision(&self, player: &Player) -> bool;
     fn apply_damage(&self, player: &mut Player);
+    fn take_damage(&mut self, damage: i32) -> i32;
+    fn get_pos(&self) -> &na::Point2<f32>;
+    fn get_hp(&self) -> i32;
 }
+
 
 pub struct TriangleEnemy {
     pub pos: na::Point2<f32>,
@@ -66,6 +70,29 @@ impl Enemy for TriangleEnemy {
     fn apply_damage(&self, player: &mut Player) {
         player.take_damage(self.damage);
     }
+
+    /*fn shoot(&self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
+        let mut bullets = Vec::new();
+        let bullet = Bullet::new(self.pos, target, self.bullet_speed);
+        bullets.push(bullet);
+        Ok(bullets)
+    }*/
+
+    fn take_damage(&mut self, damage: i32) -> i32{
+        self.hp -= damage;
+        if self.hp < 0 {
+            self.hp = 0;
+        }
+        self.hp
+    }
+
+    fn get_pos(&self) -> &na::Point2<f32> {
+        &self.pos
+    }
+
+    fn get_hp(&self) -> i32 {
+        self.hp
+    }
 }
 
 pub struct HexagonEnemy {
@@ -78,14 +105,16 @@ pub struct HexagonEnemy {
     pub shoot_cooldown: f32
 }
 
+
+
 impl HexagonEnemy {
     pub fn new(pos: na::Point2<f32>) -> Self {
         HexagonEnemy {
             pos,
-            hp: 10,
+            hp: 3,
             speed: 1.0,
             damage: 2,
-            bullet_speed: 10.0,
+            bullet_speed: 8.0,
             last_shot_time: 0.0,
             shoot_cooldown: 2.0,
         }
@@ -97,9 +126,8 @@ impl HexagonEnemy {
     }
 
     fn shoot(&self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
-        
         let mut bullets = Vec::new();
-        let bullet = Bullet::new(self.pos, target, self.bullet_speed);
+        let bullet = Bullet::new(self.pos, target, self.bullet_speed, self.damage);
         bullets.push(bullet);
         Ok(bullets)
     }    
@@ -146,5 +174,21 @@ impl Enemy for HexagonEnemy {
 
     fn apply_damage(&self, player: &mut Player) {
         player.take_damage(self.damage);
+    }
+
+    fn take_damage(&mut self, damage: i32) -> i32 {
+        self.hp -= damage;
+        if self.hp < 0 {
+            self.hp = 0;
+        }
+        self.hp
+    }
+
+    fn get_pos(&self) -> &na::Point2<f32> {
+        &self.pos
+    }
+
+    fn get_hp(&self) -> i32 {
+        self.hp
     }
 }

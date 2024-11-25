@@ -3,8 +3,8 @@ mod enemy;
 mod bullet;
 mod game;
 
-use ggez::{Context, ContextBuilder, GameResult};
-use ggez::event::{self, EventHandler};
+use ggez::{ContextBuilder, GameResult};
+use ggez::event;
 use game::Game;
 
 fn main() -> GameResult {

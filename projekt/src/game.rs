@@ -41,7 +41,7 @@ impl Game {
             _ => unreachable!(),
         };
 
-        let enemy_type = rng.gen_range(1..2); // Randomly choose between Triangle and Hexagon
+        let enemy_type = rng.gen_range(0..2); // Randomly choose between Triangle and Hexagon
     
         println!("Spawning enemy at ({}, {})", x_pos, y_pos); // Debugging spawn location
         
@@ -49,23 +49,16 @@ impl Game {
             0 => { // Spawn TriangleEnemy
                 let enemy = TriangleEnemy::new(na::Point2::new(x_pos, y_pos));
                 self.enemies.push(Box::new(enemy)); // Adding to vector
-                println!("Spawned TriangleEnemy at ({}, {})", x_pos, y_pos);
             }
             1 => { // Spawn HexagonEnemy
                 let enemy = HexagonEnemy::new(na::Point2::new(x_pos, y_pos));
                 self.enemies.push(Box::new(enemy)); // Adding to vector
-                println!("Spawned HexagonEnemy at ({}, {})", x_pos, y_pos);
             }
             _ => {}
         }
 
-        println!("Enemies count: {}", self.enemies.len());
-        println!("Bullets count: {}", self.bullets.len());
-    }
-
-    fn fire_bullet(&mut self, pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32) {
-        let bullet = Bullet::new(pos, target, speed);
-        self.bullets.push(bullet);
+        //println!("Enemies count: {}", self.enemies.len());
+        //println!("Bullets count: {}", self.bullets.len());
     }
 }
 
@@ -75,6 +68,8 @@ impl EventHandler for Game {
 
         // Update all enemies
         let mut enemies_to_remove = Vec::new();
+        let mut player_bullets_to_remove = Vec::new();
+
         for (i, enemy) in self.enemies.iter_mut().enumerate() {
             enemy.update(&self.player, ctx, &mut self.bullets);
 
@@ -83,19 +78,58 @@ impl EventHandler for Game {
                 enemies_to_remove.push(i); // Store index of enemy to remove
                 println!("Enemy touched player! Player HP: {}", self.player.hp);
             }
+
+            for (j, bullet) in self.player.bullets.iter_mut().enumerate() {
+                if bullet.check_collision_with_enemy(&**enemy) {
+                    if bullet.apply_damage_to_enemy(&mut **enemy) == 0 {    
+                        enemies_to_remove.push(i);
+                    }
+                    player_bullets_to_remove.push(j);
+                    println!("Bullet touched enemy! Enemy HP: {}", enemy.get_hp());
+                }
+                if bullet.is_off_screen() {
+                    if player_bullets_to_remove.contains(&j) {
+                        continue;
+                    }
+                    player_bullets_to_remove.push(j);
+                }
+            }
+        }
+
+        let mut bullets_to_remove = Vec::new();
+        for (i, bullet) in self.bullets.iter_mut().enumerate() {
+            bullet.update();
+            if bullet.check_collision_with_player(&self.player) == true {
+                bullet.apply_damage(&mut self.player);
+                bullets_to_remove.push(i);
+            }
+            if bullet.is_off_screen() {
+                if bullets_to_remove.contains(&i) {
+                    continue;
+                }
+                bullets_to_remove.push(i);
+            }
+        }
+
+        println!{"Player bullets {}, enemies {}, bullets {}", self.player.bullets.len(), self.enemies.len(), self.bullets.len()};
+
+        for &index in player_bullets_to_remove.iter().rev() {
+            if index < self.player.bullets.len() {
+                self.player.bullets.remove(index);
+                println!("Bullet removed from player's bullets at index {}", index);
+            }
         }
         
-        // Remove collided enemies
+
+        for i in bullets_to_remove.iter().rev() {
+            self.bullets.remove(*i);
+            println!("Bullet removed {}", i);
+        }
+
         for i in enemies_to_remove.iter().rev() {
             self.enemies.remove(*i);
+            println!("Enemy removed {}", i);
         }
-
-
-        for bullet in self.bullets.iter_mut() {
-            bullet.update(); // Funkcja do aktualizacji pozycji pocisku
-        }
-
-        self.bullets.retain(|bullet| !bullet.is_off_screen()); // Remove player bullets that are off-screen
 
         // Spawn enemies randomly
         if rand::random::<f32>() < 0.01 { // Random chance to spawn an enemy
