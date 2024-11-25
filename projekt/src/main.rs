@@ -2,6 +2,7 @@ mod player;
 mod enemy;
 mod bullet;
 mod game;
+mod shop;
 
 use ggez::{ContextBuilder, GameResult};
 use ggez::event;

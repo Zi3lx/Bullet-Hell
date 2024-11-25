@@ -27,7 +27,7 @@ impl Player {
             last_shot_time: Instant::now(),
             fire_rate: 0.5,
             player_bullet_speed: 15.0,
-            coins: 0
+            coins: 1000
         };
         Ok(s)
     }

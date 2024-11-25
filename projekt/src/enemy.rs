@@ -12,8 +12,11 @@ pub trait Enemy {
     fn check_collision(&self, player: &Player) -> bool;
     fn apply_damage(&self, player: &mut Player);
     fn take_damage(&mut self, damage: i32) -> i32;
+    fn give_coins(&self, coins: i32, player: &mut Player);
+    
     fn get_pos(&self) -> &na::Point2<f32>;
     fn get_hp(&self) -> i32;
+    fn get_coins(&self) -> i32;
 }
 
 
@@ -22,6 +25,7 @@ pub struct TriangleEnemy {
     pub hp: i32,
     pub speed: f32,
     pub damage: i32,
+    pub coins: i32
 }
 
 impl TriangleEnemy {
@@ -31,6 +35,7 @@ impl TriangleEnemy {
             hp: 1,
             speed: 6.0,
             damage: 1,
+            coins : 50
         }
     }
 
@@ -86,6 +91,10 @@ impl Enemy for TriangleEnemy {
         self.hp
     }
 
+    fn give_coins(&self, coins: i32, player: &mut Player) {
+        player.coins += self.coins;
+    }
+
     fn get_pos(&self) -> &na::Point2<f32> {
         &self.pos
     }
@@ -93,7 +102,12 @@ impl Enemy for TriangleEnemy {
     fn get_hp(&self) -> i32 {
         self.hp
     }
+
+    fn get_coins(&self) -> i32 {
+        self.coins
+    }
 }
+
 
 pub struct HexagonEnemy {
     pub pos: na::Point2<f32>,
@@ -102,10 +116,9 @@ pub struct HexagonEnemy {
     pub damage: i32,
     pub bullet_speed: f32,
     pub last_shot_time: f32,
-    pub shoot_cooldown: f32
+    pub shoot_cooldown: f32,
+    pub coins: i32,
 }
-
-
 
 impl HexagonEnemy {
     pub fn new(pos: na::Point2<f32>) -> Self {
@@ -117,6 +130,7 @@ impl HexagonEnemy {
             bullet_speed: 8.0,
             last_shot_time: 0.0,
             shoot_cooldown: 2.0,
+            coins: 100
         }
     }
 
@@ -184,11 +198,19 @@ impl Enemy for HexagonEnemy {
         self.hp
     }
 
+    fn give_coins(&self, coins: i32, player: &mut Player) {
+        player.coins += self.coins;
+    }
+
     fn get_pos(&self) -> &na::Point2<f32> {
         &self.pos
     }
 
     fn get_hp(&self) -> i32 {
         self.hp
+    }
+
+    fn get_coins(&self) -> i32 {
+        self.coins
     }
 }
