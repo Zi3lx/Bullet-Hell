@@ -9,26 +9,40 @@ pub struct Bullet {
     pub vel: na::Vector2<f32>,
     pub speed: f32,
     pub damage: i32,
+    pub size: f32,
 }
 
 impl Bullet {
-    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32, damage: i32) -> Bullet {
+    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32, damage: i32, sizeOfBullet: f32) -> Bullet {
         let direction = (target - pos).normalize();
         let sp = speed;
         Bullet {
             pos,
             vel: direction * sp,
             speed,
-            damage
+            damage,
+            size: sizeOfBullet
         }
     }
+
+    /*pub fn new(pos: na::Point2<f32>, vel: na::Vector2<f32>, speed: f32, damage: i32, sizeOfBullet: f32) -> Bullet {
+        let direction = (target - pos).normalize();
+        let sp = speed;
+        Bullet {
+            pos,
+            vel: direction * sp,
+            speed,
+            damage,
+            size: sizeOfBullet,
+        }
+    }*/
 
     pub fn update(&mut self) {
         self.pos += self.vel;
     }
 
     pub fn draw(&self, ctx: &mut Context) -> GameResult {
-        let square = graphics::Rect::new(self.pos.x, self.pos.y, 10.0, 10.0);
+        let square = graphics::Rect::new(self.pos.x, self.pos.y, self.size, self.size);
         let square_mesh = graphics::Mesh::new_rectangle(
             ctx,
             graphics::DrawMode::fill(),

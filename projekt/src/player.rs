@@ -3,6 +3,7 @@ use ggez::input::{keyboard, mouse};
 use nalgebra as na;
 use std::time::{Duration, Instant};
 use crate::bullet::Bullet;
+use ggez::graphics::{self, DrawParam, Color, Mesh};
 
 pub struct Player {
     pub hp: i32,
@@ -13,7 +14,8 @@ pub struct Player {
     pub last_shot_time: Instant, // Time of the last shot
     pub fire_rate: f32,
     pub player_bullet_speed: f32,
-    pub coins: i32
+    pub coins: i32,
+    pub points: i32
 }
 
 impl Player {
@@ -21,15 +23,20 @@ impl Player {
         let s = Player {
             hp: 100,
             damage: 1,
-            speed: 4.0,
+            speed: 10.0,
             player_pos: na::Point2::new(400.0, 300.0),
             bullets: Vec::new(),
             last_shot_time: Instant::now(),
             fire_rate: 0.5,
             player_bullet_speed: 15.0,
-            coins: 1000
+            coins: 1000,
+            points: 0
         };
         Ok(s)
+    }
+
+    pub fn add_points(&mut self, points: i32) {
+        self.points += points;
     }
 
     pub fn take_damage(&mut self, damage: i32) {
@@ -42,11 +49,23 @@ impl Player {
     pub fn fire(&mut self, ctx: &mut Context) {
         if self.last_shot_time.elapsed() >= Duration::from_secs_f32(self.fire_rate) {
             let mouse_pos = mouse::position(ctx);
-            let bullet = Bullet::new(self.player_pos, na::Point2::new(mouse_pos.x, mouse_pos.y), self.player_bullet_speed, self.damage);
+            let bullet = Bullet::new(self.player_pos, na::Point2::new(mouse_pos.x, mouse_pos.y), self.player_bullet_speed, self.damage, 10.0);
             self.bullets.push(bullet);
             self.last_shot_time = Instant::now();  // Update the shot time
         }
     }
+
+    fn draw_ui(&self, ctx: &mut Context) -> ggez::GameResult {
+        let text = format!("HP: {} \nPoints: {} \nDamage: {} \nFire Rate: {} \nSpeed: {} \nCoins: {}",
+            self.hp, self.points, self.damage, self.fire_rate, self.speed, self.coins);
+
+        let display_text = graphics::Text::new((text, graphics::Font::default(), 30.0));
+
+        // Use the tuple directly in DrawParam::dest()
+        graphics::draw(ctx, &display_text, DrawParam::default().dest([10.0, 800.0]))?;
+        Ok(())
+    }
+    
 
     pub fn update(&mut self, ctx: &mut Context) -> GameResult {
         // Player movement
@@ -83,7 +102,7 @@ impl Player {
     }
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        use ggez::graphics::{self, Mesh, DrawParam, Color};
+        self.draw_ui(ctx)?;
     
         // Draw player
         let player = Mesh::new_circle(
@@ -118,7 +137,6 @@ impl Player {
         for bullet in &self.bullets {
             bullet.draw(ctx)?;
         }
-    
         graphics::present(ctx)?;
         Ok(())
     }

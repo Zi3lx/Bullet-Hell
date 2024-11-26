@@ -3,6 +3,9 @@ mod enemy;
 mod bullet;
 mod game;
 mod shop;
+mod triangle;
+mod hexagonal;
+mod boss;
 
 use ggez::{ContextBuilder, GameResult};
 use ggez::event;

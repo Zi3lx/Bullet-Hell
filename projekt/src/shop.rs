@@ -32,12 +32,12 @@ impl Shop {
     }
 
     pub fn display(&self, ctx: &mut Context, player: &mut Player) -> GameResult {
+        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
         let text = format!(
             "Health Upgrade: {} Coins \nDamage Upgrade: {} Coins \nSpeed Upgrade: {} \nFire Rate Upgrade: {} Coins \nCoins: {}",
             self.health_upgrade_cost, self.damage_upgrade_cost, self.speed_upgrade_cost, self.fire_rate_cost, player.coins
         );
-        let display_text = graphics::Text::new((text, graphics::Font::default(), 20.0));
-        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
+        let display_text = graphics::Text::new((text, graphics::Font::default(), 30.0));
         graphics::draw(ctx, &display_text, DrawParam::default())?;
         Ok(())
     }

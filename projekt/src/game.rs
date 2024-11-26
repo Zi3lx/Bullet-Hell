@@ -1,7 +1,13 @@
 use ggez::{Context, GameResult};
 use ggez::event::{EventHandler};
+use ggez::timer;
 use crate::player::Player;
-use crate::enemy::{Enemy, TriangleEnemy, HexagonEnemy};
+use crate::enemy::Enemy;
+
+use crate::triangle::TriangleEnemy;
+use crate::hexagonal::HexagonEnemy;
+use crate::boss::Boss;
+
 use crate::bullet::Bullet;
 use crate::shop::Shop;
 
@@ -13,8 +19,13 @@ pub struct Game {
     pub player: Player,
     pub shop: Shop,
     pub enemies: Vec<Box<dyn Enemy>>,
-    pub bullets: Vec<Bullet>
+    pub bullets: Vec<Bullet>,
+    pub is_boss: bool,
+    pub level: i32,
+    pub killed_enemies: i32,
+    pub spawn_rate: f32
 }
+
 
 impl Game {
     pub fn new() -> GameResult<Game> {
@@ -22,7 +33,11 @@ impl Game {
         let shop = Shop::new()?;
         let enemies = Vec::new(); // Start with no enemies
         let bullets = Vec::new();
-        Ok(Game { player, shop, enemies, bullets })
+        let is_boss = false;
+        let level = 1;
+        let killed_enemies = 0;
+        let spawn_rate = 0.02;
+        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate })
     }
 
     fn spawn_enemy(&mut self) {
@@ -45,18 +60,28 @@ impl Game {
             _ => unreachable!(),
         };
 
-        let enemy_type = rng.gen_range(0..2); // Randomly choose between Triangle and Hexagon
+        let enemy_type = rng.gen_range(0..3); // Randomly choose between Triangle and Hexagon
     
         println!("Spawning enemy at ({}, {})", x_pos, y_pos); // Debugging spawn location
         
         match enemy_type {
             0 => { // Spawn TriangleEnemy
-                let enemy = TriangleEnemy::new(na::Point2::new(x_pos, y_pos));
+                let enemy = TriangleEnemy::new(na::Point2::new(x_pos, y_pos), self.level);
                 self.enemies.push(Box::new(enemy)); // Adding to vector
             }
             1 => { // Spawn HexagonEnemy
-                let enemy = HexagonEnemy::new(na::Point2::new(x_pos, y_pos));
+                let enemy = HexagonEnemy::new(na::Point2::new(x_pos, y_pos), self.level);
                 self.enemies.push(Box::new(enemy)); // Adding to vector
+            }
+            2 => { // Spawn Boss
+                if !self.is_boss {
+                    let boss_chance = rng.gen_range(0..10); // 10% chance to spawn boss
+                    if boss_chance == 0 {
+                        let enemy = Boss::new(na::Point2::new(300.0, 400.0), self.level);
+                        self.enemies.push(Box::new(enemy)); // Adding to vector
+                        self.is_boss = true;
+                    }
+                }
             }
             _ => {}
         }
@@ -92,16 +117,21 @@ impl EventHandler for Game {
 
             if enemy.check_collision(&self.player) {
                 enemy.apply_damage(&mut self.player); // Apply damage to player
-                enemies_to_remove.push(i); // Store index of enemy to remove
-                self.player.coins += enemy.get_coins();
                 println!("Enemy touched player! Player HP: {}", self.player.hp);
             }
 
             for (j, bullet) in self.player.bullets.iter_mut().enumerate() {
                 if bullet.check_collision_with_enemy(&**enemy) {
-                    if bullet.apply_damage_to_enemy(&mut **enemy) == 0 {    
-                        enemies_to_remove.push(i);
-                        self.player.coins += enemy.get_coins();
+                    if bullet.apply_damage_to_enemy(&mut **enemy) == 0 { 
+                        if !enemies_to_remove.contains(&i) {
+                            if enemy.is_boss() {
+                                self.is_boss = false;
+                            }
+                            enemies_to_remove.push(i);
+                            self.killed_enemies += 1;
+                            self.player.points += enemy.get_points();
+                            self.player.coins += enemy.get_coins();
+                        }
                     }
                     player_bullets_to_remove.push(j);
                     println!("Bullet touched enemy! Enemy HP: {}", enemy.get_hp());
@@ -115,7 +145,6 @@ impl EventHandler for Game {
                 }
             }
         }
-
 
 
         let mut bullets_to_remove = Vec::new();
@@ -153,11 +182,18 @@ impl EventHandler for Game {
         }
 
         // Spawn enemies randomly 0.02 = 2%
-        if rand::random::<f32>() < 0.01 { 
+        if rand::random::<f32>() < self.spawn_rate {
             self.spawn_enemy();
         }
 
-        println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
+        if self.killed_enemies == 20 {
+            self.level += 1;
+            self.killed_enemies = 0;
+            self.spawn_rate += 0.02;
+        }
+
+        println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
+        //println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
 
         Ok(())
     }

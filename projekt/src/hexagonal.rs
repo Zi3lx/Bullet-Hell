@@ -1,25 +1,38 @@
 use ggez::{Context, GameResult};
 use ggez::graphics::{self, Color, DrawParam};
+use ggez::mint::Point2;
 use nalgebra as na;
-use crate::bullet::Bullet;
+use std::f32::consts::PI;
 use crate::player::Player;
+use crate::bullet::Bullet;
 use crate::enemy::Enemy;
+use std::time::{Duration, Instant};
+
+pub struct HexagonEnemy {
+    pub pos: na::Point2<f32>,
+    pub hp: i32,
+    pub speed: f32,
+    pub damage: i32,
+    pub bullet_speed: f32,
+    pub last_shot_time: f32,
+    pub shoot_cooldown: f32,
+    pub coins: i32,
+    pub points: i32
+}
 
 impl HexagonEnemy {
-    pub fn new(pos: na::Point2<f32>) -> Self {
+    pub fn new(pos: na::Point2<f32>, level: i32) -> Self {
         HexagonEnemy {
             pos,
-            hp: 10,
-            speed: 1.0,
-            damage: 2,
-            bullet_speed: 8.0,
+            hp: 3 * level,
+            speed: 3.0 * level as f32 / 2.0 ,
+            damage: 2 * level,
+            bullet_speed: 4.0 * level as f32,
             last_shot_time: 0.0,
             shoot_cooldown: 2.0,
+            coins: 100 * level,
+            points: 50 * level
         }
-    }
-
-    fn get_pos(&self) -> &na::Point2<f32> {
-        &self.pos
     }
 
     fn move_towards_player(&mut self, player_pos: &na::Point2<f32>) {
@@ -29,7 +42,7 @@ impl HexagonEnemy {
 
     fn shoot(&self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
         let mut bullets = Vec::new();
-        let bullet = Bullet::new(self.pos, target, self.bullet_speed, self.damage);
+        let bullet = Bullet::new(self.pos, target, self.bullet_speed, self.damage, 10.0);
         bullets.push(bullet);
         Ok(bullets)
     }    
@@ -78,10 +91,31 @@ impl Enemy for HexagonEnemy {
         player.take_damage(self.damage);
     }
 
-    fn take_damage(&self, damage: i32) {
+    fn take_damage(&mut self, damage: i32) -> i32 {
         self.hp -= damage;
         if self.hp < 0 {
             self.hp = 0;
         }
+        self.hp
+    }
+
+    fn give_coins(&self, coins: i32, player: &mut Player) {
+        player.coins += self.coins;
+    }
+
+    fn get_pos(&self) -> &na::Point2<f32> {
+        &self.pos
+    }
+
+    fn get_hp(&self) -> i32 {
+        self.hp
+    }
+
+    fn get_coins(&self) -> i32 {
+        self.coins
+    }
+
+    fn get_points(&self) -> i32 {
+        self.points
     }
 }
