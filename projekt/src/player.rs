@@ -23,7 +23,7 @@ impl Player {
         let s = Player {
             hp: 100,
             damage: 1,
-            speed: 10.0,
+            speed: 6.0,
             player_pos: na::Point2::new(400.0, 300.0),
             bullets: Vec::new(),
             last_shot_time: Instant::now(),

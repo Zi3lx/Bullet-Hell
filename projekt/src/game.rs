@@ -1,6 +1,8 @@
 use ggez::{Context, GameResult};
 use ggez::event::{EventHandler};
 use ggez::timer;
+use ggez::graphics::{self, Color, DrawParam};
+
 use crate::player::Player;
 use crate::enemy::Enemy;
 
@@ -11,9 +13,9 @@ use crate::boss::Boss;
 use crate::bullet::Bullet;
 use crate::shop::Shop;
 
+//use game::Game;
 use rand::Rng;
 use nalgebra as na;
-use ggez::graphics;
 
 pub struct Game {
     pub player: Player,
@@ -77,7 +79,7 @@ impl Game {
                 if !self.is_boss {
                     let boss_chance = rng.gen_range(0..10); // 10% chance to spawn boss
                     if boss_chance == 0 {
-                        let enemy = Boss::new(na::Point2::new(300.0, 400.0), self.level);
+                        let enemy = Boss::new(na::Point2::new(x_pos, y_pos), self.level);
                         self.enemies.push(Box::new(enemy)); // Adding to vector
                         self.is_boss = true;
                     }
@@ -89,10 +91,8 @@ impl Game {
         //println!("Enemies count: {}", self.enemies.len());
         //println!("Bullets count: {}", self.bullets.len());
     }
-}
 
-impl EventHandler for Game {
-    fn update(&mut self, ctx: &mut Context) -> GameResult {
+    fn handle_shop_buy(&mut self, ctx: &mut Context) {
         if ggez::input::keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Key1) {
             self.shop.try_buy_health_upgrade(&mut self.player);
         }
@@ -105,10 +105,9 @@ impl EventHandler for Game {
         if ggez::input::keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Key4) {
             self.shop.try_buy_fire_rate_upgrade(&mut self.player);
         }
+    }
 
-        self.player.update(ctx)?;
-
-        // Update all enemies
+    fn handle_enemy_bullet_logic(&mut self, ctx: &mut Context) -> (Vec<usize>, Vec<usize>) {
         let mut enemies_to_remove = Vec::new();
         let mut player_bullets_to_remove = Vec::new();
 
@@ -146,8 +145,12 @@ impl EventHandler for Game {
             }
         }
 
+        (enemies_to_remove, player_bullets_to_remove)
+    }
 
+    fn handle_player_bullet_logic(&mut self) -> Vec<usize> {
         let mut bullets_to_remove = Vec::new();
+
         for (i, bullet) in self.bullets.iter_mut().enumerate() {
             bullet.update();
             if bullet.check_collision_with_player(&self.player) == true {
@@ -162,56 +165,82 @@ impl EventHandler for Game {
             }
         }
 
-        //println!{"Player bullets {}, enemies {}, bullets {}", self.player.bullets.len(), self.enemies.len(), self.bullets.len()};
+        bullets_to_remove   
+    }
+}
 
-        for &index in player_bullets_to_remove.iter().rev() {
-            if index < self.player.bullets.len() {
-                self.player.bullets.remove(index);
-                println!("Bullet removed from player's bullets at index {}", index);
+impl EventHandler for Game {
+    fn update(&mut self, ctx: &mut Context) -> GameResult {
+            self.handle_shop_buy(ctx);
+
+            self.player.update(ctx)?;
+
+            let (mut enemies_to_remove, mut player_bullets_to_remove) = self.handle_enemy_bullet_logic(ctx);
+
+            let mut bullets_to_remove = Vec::new();
+            
+            bullets_to_remove = self.handle_player_bullet_logic();
+
+            //println!{"Player bullets {}, enemies {}, bullets {}", self.player.bullets.len(), self.enemies.len(), self.bullets.len()};
+
+            for &index in player_bullets_to_remove.iter().rev() {
+                if index < self.player.bullets.len() {
+                    self.player.bullets.remove(index);
+                    println!("Bullet removed from player's bullets at index {}", index);
+                }
             }
-        }
-        
-        for i in bullets_to_remove.iter().rev() {
-            self.bullets.remove(*i);
-            println!("Bullet removed {}", i);
-        }
+            
+            for i in bullets_to_remove.iter().rev() {
+                self.bullets.remove(*i);
+                println!("Bullet removed {}", i);
+            }
 
-        for i in enemies_to_remove.iter().rev() {
-            self.enemies.remove(*i);
-            println!("Enemy removed {}", i);
-        }
+            for i in enemies_to_remove.iter().rev() {
+                self.enemies.remove(*i);
+                println!("Enemy removed {}", i);
+            }
 
-        // Spawn enemies randomly 0.02 = 2%
-        if rand::random::<f32>() < self.spawn_rate {
-            self.spawn_enemy();
-        }
+            // Spawn enemies randomly 0.02 = 2%
+            if rand::random::<f32>() < self.spawn_rate {
+                self.spawn_enemy();
+            }
 
-        if self.killed_enemies == 20 {
-            self.level += 1;
-            self.killed_enemies = 0;
-            self.spawn_rate += 0.02;
-        }
+            if self.killed_enemies == 30 {
+                self.level += 1;
+                self.killed_enemies = 0;
+                self.spawn_rate += 0.02;
+            }
 
-        println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
-        //println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
-
+            println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
+            //println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
 
-        for enemy in &self.enemies {
-            enemy.draw(ctx)?;
-        }
-    
-        for bullet in &self.bullets {
-            bullet.draw(ctx)?
-        }
+        if self.player.hp <= 0 {
+            let text = format!("SCORE:{}",
+            self.player.points);
 
-        self.player.draw(ctx)?; 
-        self.shop.display(ctx, &mut self.player)?;
+            let display_text = graphics::Text::new((text, graphics::Font::default(), 40.0));
 
+            // Use the tuple directly in DrawParam::dest()
+            graphics::draw(ctx, &display_text, DrawParam::default().dest([650.0, 450.0]))?;
+            println!("Game Over!");
+        }
+        else {
+            for enemy in &self.enemies {
+                enemy.draw(ctx)?;
+            }
+        
+            for bullet in &self.bullets {
+                bullet.draw(ctx)?
+            }
+
+            self.player.draw(ctx)?; 
+            self.shop.display(ctx, &mut self.player)?;
+        }
         // Present the drawn content
         graphics::present(ctx)?;
 
