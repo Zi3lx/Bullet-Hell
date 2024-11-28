@@ -24,11 +24,11 @@ impl Player {
         let s = Player {
             hp: 100,
             damage: 1,
-            speed: 6.0,
+            speed: 5.0,
             player_pos: na::Point2::new(400.0, 300.0),
             bullets: Vec::new(),
             last_shot_time: Instant::now(),
-            fire_rate: 0.5,
+            fire_rate: 0.6,
             player_bullet_speed: 15.0,
             coins: 1000,
             points: 0,
@@ -112,7 +112,7 @@ impl Player {
         // Draw health bar
         let health_bar_width = 40.0;
         let health_bar_height = 5.0;
-        let health_percentage = self.hp as f32 / 100.0; // Assuming max HP is 100
+        let health_percentage = self.hp as f32 / 100.0;
         let health_bar = graphics::Rect::new(
             self.player_pos.x - health_bar_width / 2.0,
             self.player_pos.y - 25.0, // Above the player

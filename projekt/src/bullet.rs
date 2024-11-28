@@ -23,29 +23,18 @@ impl Bullet {
         }
     }
 
-    /*pub fn new(pos: na::Point2<f32>, vel: na::Vector2<f32>, speed: f32, damage: i32, sizeOfBullet: f32) -> Bullet {
-        let direction = (target - pos).normalize();
-        let sp = speed;
-        Bullet {
-            pos,
-            vel: direction * sp,
-            speed,
-            damage,
-            size: sizeOfBullet,
-        }
-    }*/
-
     pub fn update(&mut self) {
         self.pos += self.vel;
     }
 
     pub fn draw(&self, ctx: &mut Context) -> GameResult {
+        // Draw bullet as square
         let square = graphics::Rect::new(self.pos.x, self.pos.y, self.size, self.size);
         let square_mesh = graphics::Mesh::new_rectangle(
             ctx,
             graphics::DrawMode::fill(),
             square,
-            Color::from_rgb(255, 0, 0), // Red color
+            Color::from_rgb(255, 0, 0),
         )?;
         graphics::draw(ctx, &square_mesh, DrawParam::default())?;
         Ok(())

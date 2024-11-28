@@ -38,6 +38,7 @@ impl HexagonEnemy {
         self.pos += direction * self.speed;
     }
 
+    // Shooting one bullet at a time towards player
     fn shoot(&self, _ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
         let mut bullets = Vec::new();
         let bullet = Bullet::new(self.pos, target, self.bullet_speed, self.damage, 10.0);
@@ -54,6 +55,7 @@ impl Enemy for HexagonEnemy {
         let time_between_shots = self.shoot_cooldown; // Shoot every 2 seconds
 
         if current_time - self.last_shot_time > time_between_shots {
+            // Destructing match result to get Ok(bullets) shoot retursns ok => then bullets else Error
             if let Ok(bullets) = self.shoot(ctx, player.player_pos) {
                 game_bullets.extend(bullets); // Add bullets to the game's bullets list
             }

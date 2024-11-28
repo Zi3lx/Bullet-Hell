@@ -45,8 +45,8 @@ impl Shop {
     pub fn try_buy_health_upgrade(&mut self, player: &mut Player) {
         if player.coins >= self.health_upgrade_cost {
             player.coins -= self.health_upgrade_cost;
-            player.hp += 5; // Upgrade health
-            self.health_upgrade_cost = self.health_upgrade_cost / self.health_lvl * (self.health_lvl + 1);
+            player.hp += 10; // Add health
+            self.health_upgrade_cost = self.health_upgrade_cost / self.health_lvl * (self.health_lvl + 1); // Change cost
             self.health_lvl += 1;
             println!("Health upgraded! New HP: {}", player.hp);
         } else {
@@ -58,7 +58,7 @@ impl Shop {
         if player.coins >= self.damage_upgrade_cost {
             player.coins -= self.damage_upgrade_cost;
             player.damage += 1; // Upgrade damage
-            self.damage_upgrade_cost = self.damage_upgrade_cost / self.damage_lvl * (self.damage_lvl + 1);
+            self.damage_upgrade_cost = self.damage_upgrade_cost / self.damage_lvl * (self.damage_lvl + 1); // Change cost
             self.damage_lvl += 1;
             println!("Damage upgraded! New Damage: {}", player.damage);
         } else {
@@ -70,7 +70,7 @@ impl Shop {
         if player.coins >= self.speed_upgrade_cost {
             player.coins -= self.speed_upgrade_cost;
             player.speed += 1.0; // Upgrade speed
-            self.speed_upgrade_cost = self.speed_upgrade_cost / self.speed_lvl * (self.speed_lvl + 1);
+            self.speed_upgrade_cost = self.speed_upgrade_cost / self.speed_lvl * (self.speed_lvl + 1); // Change cost
             self.speed_lvl += 1;
             println!("Speed upgraded! New Speed: {}", player.speed);
         } else {
@@ -82,7 +82,7 @@ impl Shop {
         if player.coins >= self.fire_rate_cost {
             player.coins -= self.fire_rate_cost;
             player.fire_rate -= 0.05; // Upgrade fire rate
-            self.fire_rate_cost = self.fire_rate_cost / self.fire_rate_lvl * (self.fire_rate_lvl + 1);
+            self.fire_rate_cost = self.fire_rate_cost / self.fire_rate_lvl * (self.fire_rate_lvl + 1); // Change cost
             self.fire_rate_lvl += 1;
             println!("Fire rate upgraded! New Fire Rate: {}", player.fire_rate);
         } else {

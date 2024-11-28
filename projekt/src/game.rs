@@ -12,7 +12,6 @@ use crate::boss::Boss;
 use crate::bullet::Bullet;
 use crate::shop::Shop;
 
-//use game::Game;
 use rand::Rng;
 use nalgebra as na;
 
@@ -63,23 +62,23 @@ impl Game {
 
         let enemy_type = rng.gen_range(0..3); // Randomly choose between Triangle and Hexagon
     
-        println!("Spawning enemy at ({}, {})", x_pos, y_pos); // Debugging spawn location
+        println!("Spawning enemy at ({}, {})", x_pos, y_pos);
         
         match enemy_type {
             0 => { // Spawn TriangleEnemy
                 let enemy = TriangleEnemy::new(na::Point2::new(x_pos, y_pos), self.level);
-                self.enemies.push(Box::new(enemy)); // Adding to vector
+                self.enemies.push(Box::new(enemy));
             }
             1 => { // Spawn HexagonEnemy
                 let enemy = HexagonEnemy::new(na::Point2::new(x_pos, y_pos), self.level);
-                self.enemies.push(Box::new(enemy)); // Adding to vector
+                self.enemies.push(Box::new(enemy));
             }
             2 => { // Spawn Boss
                 if !self.is_boss {
-                    let boss_chance = 0;//rng.gen_range(0..10); // 10% chance to spawn boss
+                    let boss_chance = rng.gen_range(0..10); // 10% chance to spawn boss
                     if boss_chance == 0 {
                         let enemy = Boss::new(na::Point2::new(x_pos, y_pos), self.level);
-                        self.enemies.push(Box::new(enemy)); // Adding to vector
+                        self.enemies.push(Box::new(enemy));
                         self.is_boss = true;
                     }
                 }
@@ -92,6 +91,7 @@ impl Game {
     }
 
     fn handle_shop_buy(&mut self, ctx: &mut Context) {
+        // Buy upgrades by pressing keys 1, 2, 3, 4
         if ggez::input::keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Key1) {
             self.shop.try_buy_health_upgrade(&mut self.player);
         }
@@ -107,32 +107,37 @@ impl Game {
     }
 
     fn handle_enemy_bullet_logic(&mut self, ctx: &mut Context) -> (Vec<usize>, Vec<usize>) {
+        // Creates a vector of indexes to remove (enemy and bullets)
         let mut enemies_to_remove = Vec::new();
         let mut player_bullets_to_remove = Vec::new();
 
+        // Update all enemies
         for (i, enemy) in self.enemies.iter_mut().enumerate() {
-            enemy.update(&self.player, ctx, &mut self.bullets);
+            enemy.update(&self.player, ctx, &mut self.bullets); // Udpating
 
             if enemy.check_collision(&self.player) {
                 enemy.apply_damage(&mut self.player); // Apply damage to player
-                println!("Enemy touched player! Player HP: {}", self.player.hp);
+                //println!("Enemy touched player! Player HP: {}", self.player.hp);
             }
 
+            // Check for collisions between player bullets and enemies
             for (j, bullet) in self.player.bullets.iter_mut().enumerate() {
                 if bullet.check_collision_with_enemy(&**enemy) {
                     if bullet.apply_damage_to_enemy(&mut **enemy) == 0 { 
-                        if !enemies_to_remove.contains(&i) {
-                            if enemy.is_boss() {
+                        if !enemies_to_remove.contains(&i) { // Check if the enemy is already marked for removal
+                            if enemy.is_boss() { // Controls boss state (1 boss at a time)
                                 self.is_boss = false;
                             }
+
                             enemies_to_remove.push(i);
+
                             self.killed_enemies += 1;
                             self.player.points += enemy.get_points();
                             self.player.coins += enemy.get_coins();
                         }
                     }
                     player_bullets_to_remove.push(j);
-                    println!("Bullet touched enemy! Enemy HP: {}", enemy.get_hp());
+                    //println!("Bullet touched enemy! Enemy HP: {}", enemy.get_hp());
                 }
 
                 if bullet.is_off_screen() {
@@ -148,14 +153,17 @@ impl Game {
     }
 
     fn handle_player_bullet_logic(&mut self) -> Vec<usize> {
+        // Creates a vector of indexes to remove
         let mut bullets_to_remove = Vec::new();
 
+        // Update all bullets and check if bullets hit the player
         for (i, bullet) in self.bullets.iter_mut().enumerate() {
             bullet.update();
             if bullet.check_collision_with_player(&self.player) == true {
                 bullet.apply_damage(&mut self.player);
                 bullets_to_remove.push(i);
             }
+
             if bullet.is_off_screen() {
                 if bullets_to_remove.contains(&i) {
                     continue;
@@ -183,32 +191,36 @@ impl EventHandler for Game {
             for &index in player_bullets_to_remove.iter().rev() {
                 if index < self.player.bullets.len() {
                     self.player.bullets.remove(index);
-                    println!("Bullet removed from player's bullets at index {}", index);
+                    //println!("Bullet removed from player's bullets at index {}", index);
                 }
             }
             
+
+            // Remove enemies and bullets
+
             for i in bullets_to_remove.iter().rev() {
                 self.bullets.remove(*i);
-                println!("Bullet removed {}", i);
+                //println!("Bullet removed {}", i);
             }
 
             for i in enemies_to_remove.iter().rev() {
                 self.enemies.remove(*i);
-                println!("Enemy removed {}", i);
+                //println!("Enemy removed {}", i);
             }
 
-            // Spawn enemies randomly 0.02 = 2%
+            // Spawn enemies randomly
             if rand::random::<f32>() < self.spawn_rate {
                 self.spawn_enemy();
             }
 
-            if self.killed_enemies == 30 {
+            // Check if level should be increased
+            if self.killed_enemies >= 30 {
                 self.level += 1;
                 self.killed_enemies = 0;
-                self.spawn_rate += 0.02;
+                self.spawn_rate += 0.01;
             }
 
-            println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
+            //println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
             //println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
         Ok(())
     }
@@ -216,6 +228,7 @@ impl EventHandler for Game {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
 
+        // Draw End screen if player dies else draw alla content
         if self.player.hp <= 0 {
             let text = format!("SCORE:{}",
             self.player.points);

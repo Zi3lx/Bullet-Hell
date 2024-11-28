@@ -64,13 +64,6 @@ impl Enemy for TriangleEnemy {
         player.take_damage(self.damage);
     }
 
-    /*fn shoot(&self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
-        let mut bullets = Vec::new();
-        let bullet = Bullet::new(self.pos, target, self.bullet_speed);
-        bullets.push(bullet);
-        Ok(bullets)
-    }*/
-
     fn take_damage(&mut self, damage: i32) -> i32{
         self.hp -= damage;
         if self.hp < 0 {

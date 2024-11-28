@@ -35,19 +35,13 @@ pub struct Boss {
     pub speed: f32,
     pub damage: i32,
     pub bullet_speed: f32,
-    pub last_shot_time: f32,
     pub shoot_cooldown: f32,
-    pub attacks_cooldown: f32,
     pub attack_timer: f32,
     pub current_state: BossState,
-    pub move_timer: f32,
     pub coins: i32,
     pub points: i32,
 
     pub circle_bullets_count: usize,
-    pub burst_shot_interval: f32,      // Odstęp czasu między strzałami w serii
-    pub current_bullet_count: usize,   // Liczba pocisków już wystrzelonych
-    pub time_since_last_bullet: f32,
 }
 
 
@@ -60,19 +54,13 @@ impl Boss {
             speed: 1.0,
             damage: 8 * level,
             bullet_speed: 4.0 * level as f32,
-            last_shot_time: 3.0,
             shoot_cooldown: 3.0,
-            attacks_cooldown: 2.5,
             attack_timer: 0.0,
             current_state: BossState::Idle,
-            move_timer: 3.0,
             coins: 1000 * level,
             points: 100 * level,
 
             circle_bullets_count: 8 * level as usize,
-            burst_shot_interval: 0.2,             // Odstęp czasu między strzałami w serii
-            current_bullet_count: 0,       // Początkowo brak pocisków wystrzelonych
-            time_since_last_bullet: 0.0,
         }
     }
 
@@ -96,6 +84,7 @@ impl Boss {
     }
 
     fn shoot_pattern(&mut self, ctx: &mut Context) -> GameResult<Vec<Bullet>> {
+        // Shooting on bullet each direction pattern
         let mut bullets = Vec::new();
 
         // Only shoot when cooldown has passed
@@ -108,6 +97,7 @@ impl Boss {
                 na::Point2::new(self.pos.x + 1.0, self.pos.y), // Right
             ];
 
+            // Shoot in each direction
             for target in directions {
                 let bullet = Bullet::new(self.pos, target, self.bullet_speed, self.damage, 20.0);
                 bullets.push(bullet);
@@ -122,11 +112,12 @@ impl Boss {
 
     
     fn shoot_pattern_circle(&mut self, ctx: &mut Context, bullets_in_burst: usize) -> GameResult<Vec<Bullet>> {
+        // Shooting in a circle
         let mut bullets = Vec::new();
-        let angle_step = 2.0 * PI / (bullets_in_burst as f32);
+        let angle_step = 2.0 * PI / (bullets_in_burst as f32); // Calculate the angles between each bullet
 
+        // Only shoot when cooldown has passed
         self.attack_timer += timer::delta(ctx).as_secs_f32();
-
         if self.attack_timer >= self.shoot_cooldown {
             for i in 0..bullets_in_burst {
                 let angle = i as f32 * angle_step;
@@ -144,15 +135,13 @@ impl Boss {
     }
     
 
-    fn shoot_burst_towards_player(&mut self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
+    fn shoot_big_bullet(&mut self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
+        // Shooting big bullet 
         let mut bullets = Vec::new();
     
-        // We increment the attack timer as we are in the AttackMachine state
         self.attack_timer += timer::delta(ctx).as_secs_f32();
-    
-        // If the burst is not finished and enough time has passed between shots
         if self.attack_timer >= self.shoot_cooldown  {
-            let bullet = Bullet::new(self.pos, target, self.bullet_speed * 2.0, self.damage, 50.0);
+            let bullet = Bullet::new(self.pos, target, self.bullet_speed * 2.0, self.damage * 2, 50.0);
             bullets.push(bullet);
             self.attack_timer = 0.0;  // Reset timer after firing
         }
@@ -163,12 +152,12 @@ impl Boss {
     
 
     fn draw_hp(&self, ctx: &mut Context) -> GameResult {
-        // Rysowanie tła paska HP
-        let background_rect = graphics::Rect::new(self.pos.x - 25.0, self.pos.y - 35.0, 50.0, 5.0);
+        // Drawing hp container
+        let background_rect = graphics::Rect::new(self.pos.x - 25.0, self.pos.y - 35.0, self.max_hp as f32, 5.0);
         let background_mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), background_rect, graphics::Color::from_rgb(0, 0, 0))?;
         graphics::draw(ctx, &background_mesh, graphics::DrawParam::default())?;
 
-        // Rysowanie paska HP
+        // Drawing hp
         let hp_width = (self.hp as f32 / self.max_hp as f32) * 50.0;
         let hp_rect = graphics::Rect::new(self.pos.x - 25.0, self.pos.y - 35.0, hp_width, 5.0);
         let hp_mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), hp_rect, graphics::Color::from_rgb(0, 255, 0))?;
@@ -180,27 +169,26 @@ impl Boss {
 
 impl Enemy for Boss {
     fn update(&mut self, player: &Player, ctx: &mut Context, game_bullets: &mut Vec<Bullet>) {
-        // Ruch bossa
         self.move_towards_player(&player);
 
-        //self.last_shot_time += self.shoot_cooldown;
-
+        // Update boss state based on current state
+        // Choosing with random witch attack to use
         match self.current_state {
             BossState::AttackNormal => {
                 if let Ok(bullets) = self.shoot_pattern(ctx) {
-                    game_bullets.extend(bullets);
+                    game_bullets.extend(bullets); // Add to main enemy bullet array
                 }
                 self.choose_random_move();
             }
             BossState::AttackCircle => {
                 if let Ok(bullets) = self.shoot_pattern_circle(ctx, self.circle_bullets_count) {
-                    game_bullets.extend(bullets);
+                    game_bullets.extend(bullets); // Add to main enemy bullet array
                 } 
                 self.choose_random_move();
             }
             BossState::AttackMachine => {
-                if let Ok(bullets) = self.shoot_burst_towards_player(ctx, player.player_pos) {
-                    game_bullets.extend(bullets);
+                if let Ok(bullets) = self.shoot_big_bullet(ctx, player.player_pos) {
+                    game_bullets.extend(bullets); // Add to main enemy bullet array
                 }
                 self.choose_random_move();
             }
@@ -208,18 +196,17 @@ impl Enemy for Boss {
                 self.choose_random_move();
             }
         }
-        println!("Boss state: {:?}", self.current_state);
+        //println!("Boss state: {:?}", self.current_state);
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult {
-        // Rysowanie bossa jako prostokąt lub inny kształt
+        // Drawing boss as Rect
         let rect = graphics::Rect::new(self.pos.x - 25.0, self.pos.y - 25.0, 50.0, 50.0);
-        let color = graphics::Color::from_rgb(255, 0, 0); // Kolor czerwony dla bossa
+        let color = graphics::Color::from_rgb(255, 0, 0);
 
         let mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
         graphics::draw(ctx, &mesh, graphics::DrawParam::default())?;
 
-        // Opcjonalnie: Rysowanie paska HP bossa
         self.draw_hp(ctx)?;
 
         Ok(())
