@@ -1,12 +1,10 @@
 use ggez::{Context, GameResult};
 use ggez::graphics::{self, Color, DrawParam};
-use ggez::mint::Point2;
 use nalgebra as na;
-use std::f32::consts::PI;
 use crate::player::Player;
 use crate::bullet::Bullet;
 use crate::enemy::Enemy;
-use std::time::{Duration, Instant};
+
 
 pub struct HexagonEnemy {
     pub pos: na::Point2<f32>,
@@ -40,7 +38,7 @@ impl HexagonEnemy {
         self.pos += direction * self.speed;
     }
 
-    fn shoot(&self, ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
+    fn shoot(&self, _ctx: &mut Context, target: na::Point2<f32>) -> GameResult<Vec<Bullet>> {
         let mut bullets = Vec::new();
         let bullet = Bullet::new(self.pos, target, self.bullet_speed, self.damage, 10.0);
         bullets.push(bullet);
@@ -97,10 +95,6 @@ impl Enemy for HexagonEnemy {
             self.hp = 0;
         }
         self.hp
-    }
-
-    fn give_coins(&self, coins: i32, player: &mut Player) {
-        player.coins += self.coins;
     }
 
     fn get_pos(&self) -> &na::Point2<f32> {

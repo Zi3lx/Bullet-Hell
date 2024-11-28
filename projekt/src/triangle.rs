@@ -1,12 +1,10 @@
 use ggez::{Context, GameResult};
 use ggez::graphics::{self, Color, DrawParam};
-use ggez::mint::Point2;
 use nalgebra as na;
-use std::f32::consts::PI;
 use crate::player::Player;
 use crate::bullet::Bullet;
 use crate::enemy::Enemy;
-use std::time::{Duration, Instant};
+use ggez::mint::Point2;
 
 pub struct TriangleEnemy {
     pub pos: na::Point2<f32>,
@@ -36,7 +34,7 @@ impl TriangleEnemy {
 }
 
 impl Enemy for TriangleEnemy {
-    fn update(&mut self, player: &Player, ctx: &mut Context, game_bullets: &mut Vec<Bullet>) {
+    fn update(&mut self, player: &Player, _ctx: &mut Context, _game_bullets: &mut Vec<Bullet>) {
         self.move_towards_player(&player.player_pos);
     }
 
@@ -79,10 +77,6 @@ impl Enemy for TriangleEnemy {
             self.hp = 0;
         }
         self.hp
-    }
-
-    fn give_coins(&self, coins: i32, player: &mut Player) {
-        player.coins += self.coins;
     }
 
     fn get_pos(&self) -> &na::Point2<f32> {

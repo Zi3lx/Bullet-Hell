@@ -5,17 +5,18 @@ use std::time::{Duration, Instant};
 use crate::bullet::Bullet;
 use ggez::graphics::{self, DrawParam, Color, Mesh};
 
+
 pub struct Player {
     pub hp: i32,
     pub speed: f32,
     pub damage: i32,
     pub player_pos: na::Point2<f32>,
     pub bullets: Vec<Bullet>,
-    pub last_shot_time: Instant, // Time of the last shot
+    pub last_shot_time: Instant,
     pub fire_rate: f32,
     pub player_bullet_speed: f32,
     pub coins: i32,
-    pub points: i32
+    pub points: i32,
 }
 
 impl Player {
@@ -30,13 +31,9 @@ impl Player {
             fire_rate: 0.5,
             player_bullet_speed: 15.0,
             coins: 1000,
-            points: 0
+            points: 0,
         };
         Ok(s)
-    }
-
-    pub fn add_points(&mut self, points: i32) {
-        self.points += points;
     }
 
     pub fn take_damage(&mut self, damage: i32) {
@@ -60,12 +57,9 @@ impl Player {
             self.hp, self.points, self.damage, self.fire_rate, self.speed, self.coins);
 
         let display_text = graphics::Text::new((text, graphics::Font::default(), 30.0));
-
-        // Use the tuple directly in DrawParam::dest()
         graphics::draw(ctx, &display_text, DrawParam::default().dest([10.0, 800.0]))?;
         Ok(())
     }
-    
 
     pub fn update(&mut self, ctx: &mut Context) -> GameResult {
         // Player movement
@@ -118,7 +112,7 @@ impl Player {
         // Draw health bar
         let health_bar_width = 40.0;
         let health_bar_height = 5.0;
-        let health_percentage = self.hp as f32 / 100.0; // Assuming max HP is 10
+        let health_percentage = self.hp as f32 / 100.0; // Assuming max HP is 100
         let health_bar = graphics::Rect::new(
             self.player_pos.x - health_bar_width / 2.0,
             self.player_pos.y - 25.0, // Above the player

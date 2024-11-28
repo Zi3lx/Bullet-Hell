@@ -7,21 +7,19 @@ use crate::enemy::Enemy;
 pub struct Bullet {
     pub pos: na::Point2<f32>,
     pub vel: na::Vector2<f32>,
-    pub speed: f32,
     pub damage: i32,
     pub size: f32,
 }
 
 impl Bullet {
-    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32, damage: i32, sizeOfBullet: f32) -> Bullet {
+    pub fn new(pos: na::Point2<f32>, target: na::Point2<f32>, speed: f32, damage: i32, size_of_bullet: f32) -> Bullet {
         let direction = (target - pos).normalize();
         let sp = speed;
         Bullet {
             pos,
             vel: direction * sp,
-            speed,
             damage,
-            size: sizeOfBullet
+            size: size_of_bullet
         }
     }
 

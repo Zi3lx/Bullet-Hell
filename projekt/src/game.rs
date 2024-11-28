@@ -1,7 +1,6 @@
 use ggez::{Context, GameResult};
 use ggez::event::{EventHandler};
-use ggez::timer;
-use ggez::graphics::{self, Color, DrawParam};
+use ggez::graphics::{self, DrawParam};
 
 use crate::player::Player;
 use crate::enemy::Enemy;
@@ -33,7 +32,7 @@ impl Game {
     pub fn new() -> GameResult<Game> {
         let player = Player::new()?;
         let shop = Shop::new()?;
-        let enemies = Vec::new(); // Start with no enemies
+        let enemies = Vec::new();
         let bullets = Vec::new();
         let is_boss = false;
         let level = 1;
@@ -77,7 +76,7 @@ impl Game {
             }
             2 => { // Spawn Boss
                 if !self.is_boss {
-                    let boss_chance = rng.gen_range(0..10); // 10% chance to spawn boss
+                    let boss_chance = 0;//rng.gen_range(0..10); // 10% chance to spawn boss
                     if boss_chance == 0 {
                         let enemy = Boss::new(na::Point2::new(x_pos, y_pos), self.level);
                         self.enemies.push(Box::new(enemy)); // Adding to vector
@@ -175,11 +174,9 @@ impl EventHandler for Game {
 
             self.player.update(ctx)?;
 
-            let (mut enemies_to_remove, mut player_bullets_to_remove) = self.handle_enemy_bullet_logic(ctx);
-
-            let mut bullets_to_remove = Vec::new();
+            let (enemies_to_remove, player_bullets_to_remove) = self.handle_enemy_bullet_logic(ctx);
             
-            bullets_to_remove = self.handle_player_bullet_logic();
+            let bullets_to_remove = self.handle_player_bullet_logic();
 
             //println!{"Player bullets {}, enemies {}, bullets {}", self.player.bullets.len(), self.enemies.len(), self.bullets.len()};
 

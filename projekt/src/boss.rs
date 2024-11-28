@@ -1,18 +1,15 @@
 use ggez::{Context, GameResult};
-use ggez::graphics::{self, Color, DrawParam};
-use ggez::mint::Point2;
+use ggez::graphics::{self};
 use nalgebra as na;
 use std::f32::consts::PI;
 use crate::player::Player;
 use crate::bullet::Bullet;
 use crate::enemy::Enemy;
-use std::time::{Duration, Instant};
-use rand::Rng;
 use ggez::timer;
 use std::fmt;
 
 
-enum BossState {
+pub enum BossState {
     Idle,
     AttackNormal,
     AttackCircle,
@@ -247,10 +244,6 @@ impl Enemy for Boss {
     }
 
     fn is_boss(&self) -> bool { true }
-
-    fn give_coins(&self, coins: i32, player: &mut Player) {
-        player.coins += self.coins;
-    }
 
     fn get_pos(&self) -> &na::Point2<f32> {
         &self.pos
