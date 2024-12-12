@@ -1,6 +1,6 @@
 use ggez::{Context, GameResult};
 use ggez::event::{EventHandler};
-use ggez::graphics::{self, DrawParam};
+use ggez::graphics::{self, DrawParam, Image};
 
 use crate::player::Player;
 use crate::enemy::Enemy;
@@ -23,12 +23,16 @@ pub struct Game {
     pub is_boss: bool,
     pub level: i32,
     pub killed_enemies: i32,
-    pub spawn_rate: f32
+    pub spawn_rate: f32,
+    pub triangle_image: Image,
+    pub hexagon_image: Image,
+    pub boss_image: Image,
+    pub background: Image,
 }
 
 
 impl Game {
-    pub fn new() -> GameResult<Game> {
+    pub fn new(ctx: &mut Context) -> GameResult<Game> {
         let player = Player::new()?;
         let shop = Shop::new()?;
         let enemies = Vec::new();
@@ -37,7 +41,11 @@ impl Game {
         let level = 1;
         let killed_enemies = 0;
         let spawn_rate = 0.02;
-        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate })
+        let triangle_image = Image::new(ctx, "/Bomba.png")?;
+        let hexagon_image = Image::new(ctx, "/2ndenemy.png")?;
+        let boss_image = Image::new(ctx, "/BOSS.png")?;
+        let background = Image::new(ctx, "/tlo.png")?;
+        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, background })
     }
 
     fn spawn_enemy(&mut self) {
@@ -66,18 +74,18 @@ impl Game {
         
         match enemy_type {
             0 => { // Spawn TriangleEnemy
-                let enemy = TriangleEnemy::new(na::Point2::new(x_pos, y_pos), self.level);
+                let enemy = TriangleEnemy::new(na::Point2::new(x_pos, y_pos), self.level, self.triangle_image.clone());
                 self.enemies.push(Box::new(enemy));
             }
             1 => { // Spawn HexagonEnemy
-                let enemy = HexagonEnemy::new(na::Point2::new(x_pos, y_pos), self.level);
+                let enemy = HexagonEnemy::new(na::Point2::new(x_pos, y_pos), self.level, self.hexagon_image.clone());
                 self.enemies.push(Box::new(enemy));
             }
             2 => { // Spawn Boss
                 if !self.is_boss {
                     let boss_chance = rng.gen_range(0..10); // 10% chance to spawn boss
                     if boss_chance == 0 {
-                        let enemy = Boss::new(na::Point2::new(x_pos, y_pos), self.level);
+                        let enemy = Boss::new(na::Point2::new(x_pos, y_pos), self.level, self.boss_image.clone());
                         self.enemies.push(Box::new(enemy));
                         self.is_boss = true;
                     }
@@ -226,10 +234,10 @@ impl EventHandler for Game {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
 
         // Draw End screen if player dies else draw alla content
         if self.player.hp <= 0 {
+            graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
             let text = format!("SCORE:{}",
             self.player.points);
 
@@ -240,6 +248,7 @@ impl EventHandler for Game {
             println!("Game Over!");
         }
         else {
+            graphics::draw(ctx, &self.background, graphics::DrawParam::default())?;
             for enemy in &self.enemies {
                 enemy.draw(ctx)?;
             }
@@ -248,11 +257,11 @@ impl EventHandler for Game {
                 bullet.draw(ctx)?
             }
 
-            self.player.draw(ctx)?; 
             self.shop.display(ctx, &mut self.player)?;
+            self.player.draw(ctx)?; 
         }
         // Present the drawn content
-        graphics::present(ctx)?;
+        ggez::timer::sleep(std::time::Duration::from_secs_f32(1.0 / 60.0)); // Ustalenie FPS na 60
 
         Ok(())
     }

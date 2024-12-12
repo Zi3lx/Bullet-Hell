@@ -1,5 +1,5 @@
 use ggez::{Context, GameResult};
-use ggez::graphics::{self};
+use ggez::graphics::{self, Image, DrawParam};
 use nalgebra as na;
 use std::f32::consts::PI;
 use crate::player::Player;
@@ -42,11 +42,13 @@ pub struct Boss {
     pub points: i32,
 
     pub circle_bullets_count: usize,
+
+    pub sprite: Image,
 }
 
 
 impl Boss {
-    pub fn new(pos: na::Point2<f32>, level: i32) -> Self {
+    pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         Boss {
             pos,
             hp: 100 * level,
@@ -61,6 +63,7 @@ impl Boss {
             points: 100 * level,
 
             circle_bullets_count: 8 * level as usize,
+            sprite: image
         }
     }
 
@@ -200,13 +203,7 @@ impl Enemy for Boss {
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult {
-        // Drawing boss as Rect
-        let rect = graphics::Rect::new(self.pos.x - 25.0, self.pos.y - 25.0, 50.0, 50.0);
-        let color = graphics::Color::from_rgb(255, 0, 0);
-
-        let mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
-        graphics::draw(ctx, &mesh, graphics::DrawParam::default())?;
-
+        graphics::draw(ctx, &self.sprite, DrawParam::default().dest([self.pos.x, self.pos.y]).scale([2.0, 2.0]))?;
         self.draw_hp(ctx)?;
 
         Ok(())
@@ -214,7 +211,7 @@ impl Enemy for Boss {
     
     fn check_collision(&self, player: &Player) -> bool {
         let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 50.0, 50.0);
-        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 50.0, 50.0);
+        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 100.0, 100.0);
         enemy_rect.overlaps(&player_rect)
     }
 

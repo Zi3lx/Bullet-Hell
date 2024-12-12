@@ -32,7 +32,6 @@ impl Shop {
     }
 
     pub fn display(&self, ctx: &mut Context, player: &mut Player) -> GameResult {
-        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
         let text = format!(
             "Health Upgrade: {} Coins \nDamage Upgrade: {} Coins \nSpeed Upgrade: {} \nFire Rate Upgrade: {} Coins \nCoins: {}",
             self.health_upgrade_cost, self.damage_upgrade_cost, self.speed_upgrade_cost, self.fire_rate_cost, player.coins

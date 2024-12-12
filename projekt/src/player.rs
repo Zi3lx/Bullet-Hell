@@ -109,7 +109,6 @@ impl Player {
         )?;
         graphics::draw(ctx, &player, DrawParam::default())?;
     
-        // Draw health bar
         let health_bar_width = 40.0;
         let health_bar_height = 5.0;
         let health_percentage = self.hp as f32 / 100.0;

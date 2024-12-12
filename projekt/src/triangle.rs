@@ -1,5 +1,5 @@
 use ggez::{Context, GameResult};
-use ggez::graphics::{self, Color, DrawParam};
+use ggez::graphics::{self, Color, DrawParam, Image};
 use nalgebra as na;
 use crate::player::Player;
 use crate::bullet::Bullet;
@@ -13,10 +13,11 @@ pub struct TriangleEnemy {
     pub damage: i32,
     pub coins: i32,
     pub points: i32,
+    pub sprite: Image
 }
 
 impl TriangleEnemy {
-    pub fn new(pos: na::Point2<f32>, level: i32) -> Self {
+    pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         TriangleEnemy {
             pos,
             hp: 1 * level,
@@ -24,6 +25,7 @@ impl TriangleEnemy {
             damage: 1 * level,
             coins: 50 * level,
             points: 10 * level,
+            sprite: image
         }
     }
 
@@ -39,23 +41,12 @@ impl Enemy for TriangleEnemy {
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult {
-        let vertices = vec![
-            Point2 { x: self.pos.x, y: self.pos.y - 15.0 },
-            Point2 { x: self.pos.x - 15.0, y: self.pos.y + 15.0 },
-            Point2 { x: self.pos.x + 15.0, y: self.pos.y + 15.0 },
-        ];
-        let triangle = graphics::Mesh::new_polygon(
-            ctx,
-            graphics::DrawMode::fill(),
-            &vertices,
-            Color::from_rgb(255, 0, 0),
-        )?;
-        graphics::draw(ctx, &triangle, DrawParam::default())?;
+        graphics::draw(ctx, &self.sprite, DrawParam::default().dest([self.pos.x, self.pos.y]).scale([1.5, 1.5]))?;
         Ok(())
     }
 
     fn check_collision(&self, player: &Player) -> bool {
-        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 20.0, 20.0);
+        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 25.0, 25.0);
         let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 20.0, 20.0);
         enemy_rect.overlaps(&player_rect)
     }

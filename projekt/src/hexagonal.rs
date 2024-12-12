@@ -1,10 +1,9 @@
 use ggez::{Context, GameResult};
-use ggez::graphics::{self, Color, DrawParam};
+use ggez::graphics::{self, Color, DrawParam, Image};
 use nalgebra as na;
 use crate::player::Player;
 use crate::bullet::Bullet;
 use crate::enemy::Enemy;
-
 
 pub struct HexagonEnemy {
     pub pos: na::Point2<f32>,
@@ -15,11 +14,12 @@ pub struct HexagonEnemy {
     pub last_shot_time: f32,
     pub shoot_cooldown: f32,
     pub coins: i32,
-    pub points: i32
+    pub points: i32,
+    pub sprite: Image
 }
 
 impl HexagonEnemy {
-    pub fn new(pos: na::Point2<f32>, level: i32) -> Self {
+    pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         HexagonEnemy {
             pos,
             hp: 3 * level,
@@ -27,9 +27,10 @@ impl HexagonEnemy {
             damage: 2 * level,
             bullet_speed: 4.0 * level as f32,
             last_shot_time: 0.0,
-            shoot_cooldown: 2.0,
+            shoot_cooldown: 3.5,
             coins: 100 * level,
-            points: 50 * level
+            points: 50 * level,
+            sprite: image
         }
     }
 
@@ -64,26 +65,13 @@ impl Enemy for HexagonEnemy {
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult {
-        let hexagon = graphics::Mesh::new_polygon(
-            ctx,
-            graphics::DrawMode::fill(),
-            &[
-                [self.pos.x, self.pos.y],
-                [self.pos.x + 20.0, self.pos.y + 10.0],
-                [self.pos.x + 20.0, self.pos.y + 30.0],
-                [self.pos.x, self.pos.y + 40.0],
-                [self.pos.x - 20.0, self.pos.y + 30.0],
-                [self.pos.x - 20.0, self.pos.y + 10.0],
-            ],
-            Color::from_rgb(0, 0, 255),
-        )?;
-        graphics::draw(ctx, &hexagon, DrawParam::default())?;
+        graphics::draw(ctx, &self.sprite, DrawParam::default().dest([self.pos.x, self.pos.y]).scale([2.5, 2.5]))?;
         Ok(())
     }
 
     fn check_collision(&self, player: &Player) -> bool {
-        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 20.0, 20.0);
-        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 20.0, 20.0);
+        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 25.0, 25.0);
+        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 25.0, 25.0);
         enemy_rect.overlaps(&player_rect)
     }
 
