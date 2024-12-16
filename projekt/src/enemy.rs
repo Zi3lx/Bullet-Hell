@@ -18,4 +18,5 @@ pub trait Enemy {
     fn get_hp(&self) -> i32;
     fn get_coins(&self) -> i32;
     fn get_points(&self) -> i32;
+    fn get_size(&self) -> f32;
 }

@@ -2,6 +2,8 @@ use ggez::{Context, GameResult};
 use ggez::event::{EventHandler};
 use ggez::graphics::{self, DrawParam, Image};
 
+use ggez::input::{keyboard, mouse};
+
 use crate::player::Player;
 use crate::enemy::Enemy;
 
@@ -15,6 +17,13 @@ use crate::shop::Shop;
 use rand::Rng;
 use nalgebra as na;
 
+#[derive(PartialEq)]
+enum GameState {
+    Playing,
+    GameOver,
+    Menu
+}
+
 pub struct Game {
     pub player: Player,
     pub shop: Shop,
@@ -27,7 +36,7 @@ pub struct Game {
     pub triangle_image: Image,
     pub hexagon_image: Image,
     pub boss_image: Image,
-    pub background: Image,
+    pub game_state: GameState
 }
 
 
@@ -44,8 +53,8 @@ impl Game {
         let triangle_image = Image::new(ctx, "/Bomba.png")?;
         let hexagon_image = Image::new(ctx, "/2ndenemy.png")?;
         let boss_image = Image::new(ctx, "/BOSS.png")?;
-        let background = Image::new(ctx, "/tlo.png")?;
-        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, background })
+        let game_state = GameState::Menu;
+        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, game_state })
     }
 
     fn spawn_enemy(&mut self) {
@@ -182,10 +191,63 @@ impl Game {
 
         bullets_to_remove   
     }
+
+
+    pub fn draw_death_screen(&mut self, ctx: &mut Context) -> GameResult {
+        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
+        let text = format!("SCORE:{}", self.player.points);
+
+        let display_text = graphics::Text::new((text, graphics::Font::default(), 40.0));
+
+        // Use the tuple directly in DrawParam::dest()
+        graphics::draw(ctx, &display_text, DrawParam::default().dest([650.0, 450.0]))?;
+        println!("Game Over!");
+        println!("Score: {}", self.player.points);
+        graphics::present(ctx)?;
+
+        Ok(())
+    }
+
+    pub fn draw_playing_screen(&mut self, ctx: &mut Context) -> GameResult {
+        graphics::clear(ctx, graphics::Color::from_rgb(166, 153, 153));
+        for enemy in &self.enemies {
+            enemy.draw(ctx)?;
+        }
+    
+        for bullet in &self.bullets {
+            bullet.draw(ctx)?
+        }
+
+        self.shop.display(ctx, &mut self.player)?;
+        self.player.draw(ctx)?; 
+
+        Ok(())
+    }
+
+    pub fn draw_menu_screen(&mut self, ctx: &mut Context) -> GameResult {
+        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
+        let text = format!("OTOCZONY");
+        let text2 = format!("PRESS SPACE TO START");
+
+        let display_text = graphics::Text::new((text, graphics::Font::default(), 100.0));
+        let display_text2 = graphics::Text::new((text2, graphics::Font::default(), 50.0));
+
+        graphics::draw(ctx, &display_text, DrawParam::default().dest([525.0, 350.0]))?;
+        graphics::draw(ctx, &display_text2, DrawParam::default().dest([475.0, 550.0]))?;
+        graphics::present(ctx)?;
+
+        Ok(())
+    }
 }
 
 impl EventHandler for Game {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
+        if self.game_state == GameState::Menu {
+            if keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Space) {
+                self.game_state = GameState::Playing;
+            }
+        }
+        else if self.game_state == GameState::Playing {
             self.handle_shop_buy(ctx);
 
             self.player.update(ctx)?;
@@ -202,7 +264,6 @@ impl EventHandler for Game {
                     //println!("Bullet removed from player's bullets at index {}", index);
                 }
             }
-            
 
             // Remove enemies and bullets
 
@@ -228,40 +289,30 @@ impl EventHandler for Game {
                 self.spawn_rate += 0.01;
             }
 
-            //println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
-            //println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
+            if self.player.is_dead() == true {
+                self.game_state = GameState::GameOver;
+            }
+        }
+        //println!("Level: {}, Enemies killed: {}, Player hp: {}, damage: {}, speed: {}, coins: {}, SpawnRate {}", self.level, self.killed_enemies, self.player.hp, self.player.damage, self.player.speed, self.player.coins, self.spawn_rate);
+        //println!("Player hp: {}, damage: {}, speed: {}, coins: {}", self.player.hp, self.player.damage, self.player.speed, self.player.coins);
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
 
-        // Draw End screen if player dies else draw alla content
-        if self.player.hp <= 0 {
-            graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
-            let text = format!("SCORE:{}",
-            self.player.points);
-
-            let display_text = graphics::Text::new((text, graphics::Font::default(), 40.0));
-
-            // Use the tuple directly in DrawParam::dest()
-            graphics::draw(ctx, &display_text, DrawParam::default().dest([650.0, 450.0]))?;
-            println!("Game Over!");
+        // Draw End screen if player dies else draw content
+        if self.game_state == GameState::GameOver {
+            self.draw_death_screen(ctx);
         }
-        else {
-            graphics::draw(ctx, &self.background, graphics::DrawParam::default())?;
-            for enemy in &self.enemies {
-                enemy.draw(ctx)?;
-            }
-        
-            for bullet in &self.bullets {
-                bullet.draw(ctx)?
-            }
-
-            self.shop.display(ctx, &mut self.player)?;
-            self.player.draw(ctx)?; 
+        else if self.game_state == GameState::Playing {
+            self.draw_playing_screen(ctx);
+        }
+        else if self.game_state == GameState::Menu {
+            self.draw_menu_screen(ctx);
         }
         // Present the drawn content
-        ggez::timer::sleep(std::time::Duration::from_secs_f32(1.0 / 60.0)); // Ustalenie FPS na 60
+        ggez::timer::sleep(std::time::Duration::from_secs_f32(1.0 / 60.0)); // 60 FPS
+        //otoczony
 
         Ok(())
     }

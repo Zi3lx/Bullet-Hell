@@ -61,8 +61,8 @@ impl Bullet {
 
     pub fn check_collision_with_enemy(&self, enemy: &dyn Enemy) -> bool {
         let enemy_pos = enemy.get_pos();
-        let enemy_rect = graphics::Rect::new(enemy_pos.x - 10.0, enemy_pos.y - 10.0, 25.0, 25.0);
-        let bullet_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 25.0, 25.0);
+        let enemy_rect = graphics::Rect::new(enemy_pos.x - 10.0, enemy_pos.y - 10.0, enemy.get_size(), enemy.get_size());
+        let bullet_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 20.0, 20.0);
         bullet_rect.overlaps(&enemy_rect)
     }
 

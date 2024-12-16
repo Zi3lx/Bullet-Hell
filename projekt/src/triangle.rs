@@ -7,6 +7,7 @@ use crate::enemy::Enemy;
 use ggez::mint::Point2;
 
 pub struct TriangleEnemy {
+    pub size: f32,
     pub pos: na::Point2<f32>,
     pub hp: i32,
     pub speed: f32,
@@ -19,6 +20,7 @@ pub struct TriangleEnemy {
 impl TriangleEnemy {
     pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         TriangleEnemy {
+            size: 30.0,
             pos,
             hp: 1 * level,
             speed: 6.0 * level as f32 / 2.0,
@@ -46,7 +48,7 @@ impl Enemy for TriangleEnemy {
     }
 
     fn check_collision(&self, player: &Player) -> bool {
-        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 25.0, 25.0);
+        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, self.size, self.size);
         let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 20.0, 20.0);
         enemy_rect.overlaps(&player_rect)
     }
@@ -77,5 +79,9 @@ impl Enemy for TriangleEnemy {
 
     fn get_points(&self) -> i32 {
         self.points
+    }
+
+    fn get_size(&self) -> f32 {
+        self.size
     }
 }

@@ -43,6 +43,19 @@ impl Player {
         }
     }
 
+    pub fn check_possition(&mut self) {
+        if self.player_pos.x < 0.0 {
+            self.player_pos.x = 0.0;
+        } else if self.player_pos.x > 1570.0 {
+            self.player_pos.x = 1570.0;
+        }
+        if self.player_pos.y < 0.0 {
+            self.player_pos.y = 0.0;
+        } else if self.player_pos.y > 1000.0 {
+            self.player_pos.y = 1000.0;
+        }
+    }
+
     pub fn fire(&mut self, ctx: &mut Context) {
         if self.last_shot_time.elapsed() >= Duration::from_secs_f32(self.fire_rate) {
             let mouse_pos = mouse::position(ctx);
@@ -77,13 +90,15 @@ impl Player {
             self.player_pos.x += speed;
         }
 
+        self.check_possition();
+
         // Exit the game when ESC is pressed
         if keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Escape) {
             ggez::event::quit(ctx);
         }
 
         // Fire when the spacebar is pressed
-        if keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Space) {
+        if keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Space) || mouse::button_pressed(ctx, ggez::input::mouse::MouseButton::Left) {
             self.fire(ctx);
         }
 
@@ -132,5 +147,9 @@ impl Player {
         }
         graphics::present(ctx)?;
         Ok(())
+    }
+
+    pub fn is_dead(&self) -> bool {
+        self.hp <= 0
     }
 }

@@ -6,6 +6,7 @@ use crate::bullet::Bullet;
 use crate::enemy::Enemy;
 
 pub struct HexagonEnemy {
+    pub size: f32,
     pub pos: na::Point2<f32>,
     pub hp: i32,
     pub speed: f32,
@@ -21,6 +22,7 @@ pub struct HexagonEnemy {
 impl HexagonEnemy {
     pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         HexagonEnemy {
+            size: 25.0,
             pos,
             hp: 3 * level,
             speed: 3.0 * level as f32 / 2.0 ,
@@ -70,8 +72,8 @@ impl Enemy for HexagonEnemy {
     }
 
     fn check_collision(&self, player: &Player) -> bool {
-        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, 25.0, 25.0);
-        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 25.0, 25.0);
+        let enemy_rect = graphics::Rect::new(self.pos.x - 10.0, self.pos.y - 10.0, self.size, self.size);
+        let player_rect = graphics::Rect::new(player.player_pos.x - 10.0, player.player_pos.y - 10.0, 20.0, 20.0);
         enemy_rect.overlaps(&player_rect)
     }
 
@@ -101,5 +103,9 @@ impl Enemy for HexagonEnemy {
 
     fn get_points(&self) -> i32 {
         self.points
+    }
+
+    fn get_size(&self) -> f32 {
+        self.size
     }
 }
