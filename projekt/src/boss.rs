@@ -51,7 +51,7 @@ pub struct Boss {
 impl Boss {
     pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         Boss {
-            size: 50.0,
+            size: 100.0,
             pos,
             hp: 100 * level,
             max_hp: 100 * level,
@@ -115,7 +115,6 @@ impl Boss {
         Ok(bullets)
     }
 
-    
     fn shoot_pattern_circle(&mut self, ctx: &mut Context, bullets_in_burst: usize) -> GameResult<Vec<Bullet>> {
         // Shooting in a circle
         let mut bullets = Vec::new();
@@ -153,12 +152,10 @@ impl Boss {
 
         Ok(bullets)
     }
-    
-    
 
     fn draw_hp(&self, ctx: &mut Context) -> GameResult {
         // Drawing hp container
-        let background_rect = graphics::Rect::new(self.pos.x, self.pos.y - 35.0, self.max_hp as f32, 5.0);
+        let background_rect = graphics::Rect::new(self.pos.x, self.pos.y - 35.0, self.size, 5.0);
         let background_mesh = graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), background_rect, graphics::Color::from_rgb(0, 0, 0))?;
         graphics::draw(ctx, &background_mesh, graphics::DrawParam::default())?;
 

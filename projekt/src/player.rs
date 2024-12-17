@@ -3,7 +3,7 @@ use ggez::input::{keyboard, mouse};
 use nalgebra as na;
 use std::time::{Duration, Instant};
 use crate::bullet::Bullet;
-use ggez::graphics::{self, DrawParam, Color, Mesh};
+use ggez::graphics::{self, DrawParam, Color, Mesh, Image};
 
 
 pub struct Player {
@@ -17,10 +17,11 @@ pub struct Player {
     pub player_bullet_speed: f32,
     pub coins: i32,
     pub points: i32,
+    pub player_image: Image,
 }
 
 impl Player {
-    pub fn new() -> GameResult<Player> {
+    pub fn new(image: Image) -> GameResult<Player> {
         let s = Player {
             hp: 100,
             damage: 1,
@@ -32,6 +33,7 @@ impl Player {
             player_bullet_speed: 15.0,
             coins: 1000,
             points: 0,
+            player_image: image
         };
         Ok(s)
     }
@@ -112,24 +114,24 @@ impl Player {
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult {
         self.draw_ui(ctx)?;
+
+        let mouse_pos = mouse::position(ctx);
+        let dx = mouse_pos.x - self.player_pos.x;
+        let dy = mouse_pos.y - self.player_pos.y;
+        let angle = dy.atan2(dx);
     
-        // Draw player
-        let player = Mesh::new_circle(
-            ctx,
-            graphics::DrawMode::fill(),
-            [self.player_pos.x, self.player_pos.y],
-            20.0,
-            2.0,
-            Color::from_rgb(0, 255, 0),
+        graphics::draw(ctx, &self.player_image, DrawParam::default()
+            .dest([self.player_pos.x, self.player_pos.y])
+            .rotation(angle)
+            .offset([0.5, 0.5])
         )?;
-        graphics::draw(ctx, &player, DrawParam::default())?;
     
-        let health_bar_width = 40.0;
+        let health_bar_width = 50.0;
         let health_bar_height = 5.0;
         let health_percentage = self.hp as f32 / 100.0;
         let health_bar = graphics::Rect::new(
-            self.player_pos.x - health_bar_width / 2.0,
-            self.player_pos.y - 25.0, // Above the player
+            self.player_pos.x - 25.0,
+            self.player_pos.y - 50.0, // Above the player
             health_bar_width * health_percentage,
             health_bar_height,
         );

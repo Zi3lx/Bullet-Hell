@@ -1,5 +1,5 @@
 use ggez::{Context, GameResult};
-use ggez::graphics::{self, Color, DrawParam, Image};
+use ggez::graphics::{self, DrawParam, Image};
 use nalgebra as na;
 use crate::player::Player;
 use crate::bullet::Bullet;
@@ -22,7 +22,7 @@ pub struct HexagonEnemy {
 impl HexagonEnemy {
     pub fn new(pos: na::Point2<f32>, level: i32, image: Image) -> Self {
         HexagonEnemy {
-            size: 25.0,
+            size: 62.5,
             pos,
             hp: 3 * level,
             speed: 3.0 * level as f32 / 2.0 ,

@@ -6,11 +6,11 @@ mod shop;
 mod triangle;
 mod hexagonal;
 mod boss;
+mod menu;
 
 use ggez::{ContextBuilder, GameResult};
 use ggez::event;
 use game::Game;
-use std::fs;
 
 fn main() -> GameResult {
     let (mut ctx, event_loop) = ContextBuilder::new("bullet_hell", "BoomBoom")

@@ -33,7 +33,7 @@ impl Shop {
 
     pub fn display(&self, ctx: &mut Context, player: &mut Player) -> GameResult {
         let text = format!(
-            "Health Upgrade: {} Coins \nDamage Upgrade: {} Coins \nSpeed Upgrade: {} \nFire Rate Upgrade: {} Coins \nCoins: {}",
+            "Press NUM key to buy\n1. Health Upgrade: {} \n2. Damage Upgrade: {} \n3. Speed Upgrade: {} \n4. Fire Rate Upgrade: {} \nCoins: {}",
             self.health_upgrade_cost, self.damage_upgrade_cost, self.speed_upgrade_cost, self.fire_rate_cost, player.coins
         );
         let display_text = graphics::Text::new((text, graphics::Font::default(), 30.0));

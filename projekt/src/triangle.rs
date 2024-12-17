@@ -1,10 +1,9 @@
 use ggez::{Context, GameResult};
-use ggez::graphics::{self, Color, DrawParam, Image};
+use ggez::graphics::{self, DrawParam, Image};
 use nalgebra as na;
 use crate::player::Player;
 use crate::bullet::Bullet;
 use crate::enemy::Enemy;
-use ggez::mint::Point2;
 
 pub struct TriangleEnemy {
     pub size: f32,

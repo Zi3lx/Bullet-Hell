@@ -2,10 +2,11 @@ use ggez::{Context, GameResult};
 use ggez::event::{EventHandler};
 use ggez::graphics::{self, DrawParam, Image};
 
-use ggez::input::{keyboard, mouse};
+use ggez::input::{keyboard};
 
 use crate::player::Player;
 use crate::enemy::Enemy;
+use crate::menu::MenuParallax;
 
 use crate::triangle::TriangleEnemy;
 use crate::hexagonal::HexagonEnemy;
@@ -36,13 +37,17 @@ pub struct Game {
     pub triangle_image: Image,
     pub hexagon_image: Image,
     pub boss_image: Image,
-    pub game_state: GameState
+    pub player_image: Image,
+    pub tlo: Image,
+    pub game_state: GameState,
+    pub menu: MenuParallax
 }
 
 
 impl Game {
     pub fn new(ctx: &mut Context) -> GameResult<Game> {
-        let player = Player::new()?;
+        let player_image = Image::new(ctx, "/player.png")?;
+        let player = Player::new(player_image.clone())?;
         let shop = Shop::new()?;
         let enemies = Vec::new();
         let bullets = Vec::new();
@@ -53,8 +58,10 @@ impl Game {
         let triangle_image = Image::new(ctx, "/Bomba.png")?;
         let hexagon_image = Image::new(ctx, "/2ndenemy.png")?;
         let boss_image = Image::new(ctx, "/BOSS.png")?;
+        let tlo = Image::new(ctx, "/tlo2.png")?;
         let game_state = GameState::Menu;
-        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, game_state })
+        let menu = MenuParallax::new(ctx)?;
+        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, player_image, tlo, game_state, menu})
     }
 
     fn spawn_enemy(&mut self) {
@@ -210,6 +217,7 @@ impl Game {
 
     pub fn draw_playing_screen(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::Color::from_rgb(166, 153, 153));
+        graphics::draw(ctx, &self.tlo, DrawParam::default())?;
         for enemy in &self.enemies {
             enemy.draw(ctx)?;
         }
@@ -225,7 +233,7 @@ impl Game {
     }
 
     pub fn draw_menu_screen(&mut self, ctx: &mut Context) -> GameResult {
-        graphics::clear(ctx, graphics::Color::from_rgb(0, 0, 0));
+        self.menu.draw(ctx)?;
         let text = format!("OTOCZONY");
         let text2 = format!("PRESS SPACE TO START");
 
@@ -243,6 +251,7 @@ impl Game {
 impl EventHandler for Game {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         if self.game_state == GameState::Menu {
+            self.menu.update();
             if keyboard::is_key_pressed(ctx, ggez::event::KeyCode::Space) {
                 self.game_state = GameState::Playing;
             }
@@ -302,13 +311,13 @@ impl EventHandler for Game {
 
         // Draw End screen if player dies else draw content
         if self.game_state == GameState::GameOver {
-            self.draw_death_screen(ctx);
+            self.draw_death_screen(ctx)?;
         }
         else if self.game_state == GameState::Playing {
-            self.draw_playing_screen(ctx);
+            self.draw_playing_screen(ctx)?;
         }
         else if self.game_state == GameState::Menu {
-            self.draw_menu_screen(ctx);
+            self.draw_menu_screen(ctx)?;
         }
         // Present the drawn content
         ggez::timer::sleep(std::time::Duration::from_secs_f32(1.0 / 60.0)); // 60 FPS
