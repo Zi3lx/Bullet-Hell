@@ -20,7 +20,7 @@ fn main() -> GameResult {
             height: 1000.0,
             ..Default::default()
         })
-        .add_resource_path("../resources")
+        .add_resource_path("resources")
         .build()?;
     
     let game = Game::new(&mut ctx)?;
