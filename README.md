@@ -51,7 +51,7 @@ Przetrwać jak najdłużej, pokonując wrogów, unikając obrażeń i zdobywają
 
 Program był napisany na na systemi **macOS** i by uruchomć go na na tym systemie należy przejść do floderu src i wpisać cargo build / cargo run. 
 
-Program działą również pod systemem **Linux** jednak może być cięższy do uruchomienia. Jeśli będą występowały błędy podczas kompilacji należy w pliku Cargo.toml odkomentować linijkę #librust-libudev-sys-dev = "0.1.4".
+Program działą również pod systemem **Linux** jednak może być cięższy do uruchomienia.
 
 
 <img width="748" alt="Zrzut ekranu 2024-12-18 o 12 39 14" src="https://github.com/user-attachments/assets/b653f0e2-9b68-406d-9c10-9409e137dc3e" />
