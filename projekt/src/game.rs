@@ -19,7 +19,7 @@ use rand::Rng;
 use nalgebra as na;
 
 #[derive(PartialEq)]
-enum GameState {
+pub enum GameState {
     Playing,
     GameOver,
     Menu
@@ -37,7 +37,7 @@ pub struct Game {
     pub triangle_image: Image,
     pub hexagon_image: Image,
     pub boss_image: Image,
-    pub player_image: Image,
+    pub _player_image: Image,
     pub tlo: Image,
     pub game_state: GameState,
     pub menu: MenuParallax
@@ -46,8 +46,8 @@ pub struct Game {
 
 impl Game {
     pub fn new(ctx: &mut Context) -> GameResult<Game> {
-        let player_image = Image::new(ctx, "/player.png")?;
-        let player = Player::new(player_image.clone())?;
+        let _player_image = Image::new(ctx, "/player.png")?;
+        let player = Player::new(_player_image.clone())?;
         let shop = Shop::new()?;
         let enemies = Vec::new();
         let bullets = Vec::new();
@@ -61,7 +61,7 @@ impl Game {
         let tlo = Image::new(ctx, "/tlo2.png")?;
         let game_state = GameState::Menu;
         let menu = MenuParallax::new(ctx)?;
-        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, player_image, tlo, game_state, menu})
+        Ok(Game { player, shop, enemies, bullets, is_boss, level, killed_enemies, spawn_rate, triangle_image, hexagon_image, boss_image, _player_image, tlo, game_state, menu})
     }
 
     fn spawn_enemy(&mut self) {
